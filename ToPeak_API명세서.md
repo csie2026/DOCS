@@ -73,7 +73,10 @@ JSON 예시의 ID, 이름, URL, 수치는 형식 설명용이며 실제 DB 조�
 - Response: `Map<String,String>`, 두 필드 모두 문자열. 주요 상태: 200.
 
 ```json
-{"headerName":"X-CSRF-TOKEN","token":"예시-CSRF-토큰"}
+{
+  "headerName": "X-CSRF-TOKEN",
+  "token": "예시-CSRF-토큰"
+}
 ```
 
 변경 요청 헤더에는 반환된 `headerName`을 그대로 사용한다. 세션 변경/로그아웃 후 기존 토큰을 영구 재사용하는 규약은 없다.
@@ -100,7 +103,9 @@ JSON 예시의 ID, 이름, URL, 수치는 형식 설명용이며 실제 DB 조�
 - Response: 성공 302, `${FRONTEND_URL}/?oauth=success`로 redirect(기본 `http://localhost:5173`). 실패 401, 아래 JSON. JWT나 access token을 FE URL로 반환하지 않는다.
 
 ```json
-{"error":"oauth_login_failed"}
+{
+  "error": "oauth_login_failed"
+}
 ```
 
 ### A05. Kakao callback
@@ -139,7 +144,16 @@ JSON 예시의 ID, 이름, URL, 수치는 형식 설명용이며 실제 DB 조�
 아래는 U01/U02/U05에서 사용하는 동일 응답 예시다. `age`는 2026년 코드 계산 기준이다.
 
 ```json
-{"userId":7,"nickname":"산사람","birthYear":2003,"age":24,"profileImageUrl":"/api/users/me/images/profile?v=123e4567-e89b-12d3-a456-426614174000","profileCompleted":true,"score":null,"backgroundImageUrl":null}
+{
+  "userId": 7,
+  "nickname": "산사람",
+  "birthYear": 2003,
+  "age": 24,
+  "profileImageUrl": "/api/users/me/images/profile?v=123e4567-e89b-12d3-a456-426614174000",
+  "profileCompleted": true,
+  "score": null,
+  "backgroundImageUrl": null
+}
 ```
 
 `PublicMemberResponse`(U03/R01):
@@ -152,7 +166,12 @@ JSON 예시의 ID, 이름, URL, 수치는 형식 설명용이며 실제 DB 조�
 | score | Long | 가능 | 저장된 점수 |
 
 ```json
-{"userId":7,"nickname":"산사람","profileImageUrl":"https://example.com/provider-photo.jpg","score":null}
+{
+  "userId": 7,
+  "nickname": "산사람",
+  "profileImageUrl": "https://example.com/provider-photo.jpg",
+  "score": null
+}
 ```
 
 공개 DTO에는 출생연도, 나이, 이메일, provider명, providerId, 배경 이미지, 세션/OAuth 내부 정보가 없다. 업로드한 개인 프로필 이미지를 공개하는 API는 현재 없다. provider 사진 URL은 공개 응답에 들어갈 수 있다.
@@ -175,7 +194,10 @@ JSON 예시의 ID, 이름, URL, 수치는 형식 설명용이며 실제 DB 조�
 | birthYear | Integer | 필수, 1900 이상 현재 연도 이하 |
 
 ```json
-{"nickname":"산사람","birthYear":2003}
+{
+  "nickname": "산사람",
+  "birthYear": 2003
+}
 ```
 
 - 설명: 본인 이름·출생연도를 설정하고 프로필을 완료 처리한다. 닉네임 중복 금지 규칙은 없다. 이미지 수정은 U05/U06으로 한다.
@@ -236,7 +258,17 @@ M01은 산 목록·선택용 기본 정보, M02는 선택한 산의 코스 목�
 | courseCount | int | 아니오 | 코스 수 |
 
 ```json
-[{"id":1,"name":"예시산","city":"예시시","height":800.0,"lat":37.7,"lng":127.3,"courseCount":3}]
+[
+  {
+    "id": 1,
+    "name": "예시산",
+    "city": "예시시",
+    "height": 800.0,
+    "lat": 37.7,
+    "lng": 127.3,
+    "courseCount": 3
+  }
+]
 ```
 
 FE 실등산 선택 화면은 이 목록을 받은 뒤 이름/시·군을 필터링한다. 기존 탐색 지도/추천·상세 화면에는 정적 데이터도 남아 있다. 현재 규모의 단순 필터를 위해 별도 검색/지역 API를 추가 설계하지 않는다.
@@ -264,7 +296,22 @@ FE 실등산 선택 화면은 이 목록을 받은 뒤 이름/시·군을 필터
 | source | String | 아니오 | DB 값 FOREST/OSM |
 
 ```json
-[{"id":1,"mountainId":1,"name":"예시 코스","startName":"예시 입구","startLat":37.68,"startLng":127.28,"lengthKm":2.9,"upMin":90,"downMin":60,"difficulty":"NORMAL","risk":null,"source":"OSM"}]
+[
+  {
+    "id": 1,
+    "mountainId": 1,
+    "name": "예시 코스",
+    "startName": "예시 입구",
+    "startLat": 37.68,
+    "startLng": 127.28,
+    "lengthKm": 2.9,
+    "upMin": 90,
+    "downMin": 60,
+    "difficulty": "NORMAL",
+    "risk": null,
+    "source": "OSM"
+  }
+]
 ```
 
 ### M03. 코스 상세 / 경로
@@ -275,7 +322,32 @@ FE 실등산 선택 화면은 이 목록을 받은 뒤 이름/시·군을 필터
 - Response: 아래 JSON. `course` 필드는 M02와 동일. 주요 상태 200/404, 인증 401. DB path JSON 손상 시 공통 400을 보장하지 않는다.
 
 ```json
-{"course":{"id":1,"mountainId":1,"name":"예시 코스","startName":"예시 입구","startLat":37.68,"startLng":127.28,"lengthKm":2.9,"upMin":90,"downMin":60,"difficulty":"NORMAL","risk":null,"source":"OSM"},"path":[[127.28,37.68],[127.3,37.7]]}
+{
+  "course": {
+    "id": 1,
+    "mountainId": 1,
+    "name": "예시 코스",
+    "startName": "예시 입구",
+    "startLat": 37.68,
+    "startLng": 127.28,
+    "lengthKm": 2.9,
+    "upMin": 90,
+    "downMin": 60,
+    "difficulty": "NORMAL",
+    "risk": null,
+    "source": "OSM"
+  },
+  "path": [
+    [
+      127.28,
+      37.68
+    ],
+    [
+      127.3,
+      37.7
+    ]
+  ]
+}
 ```
 
 ## 6. 날씨 API
@@ -301,7 +373,33 @@ FE 실등산 선택 화면은 이 목록을 받은 뒤 이름/시·군을 필터
 | HourForecast | windSpeed / humidity | Double / Integer | 가능 |
 
 ```json
-{"mountainId":1,"mountainName":"예시산","baseTime":"2026-10-03T08:00:00","days":[{"date":"2026-10-03","level":"GOOD","message":"등산하기 좋은 날씨예요. 즐거운 산행 되세요!","notes":[],"hours":[{"time":"2026-10-03T09:00:00","temperature":18.0,"sky":1,"pty":0,"pop":10,"precipitationMm":0.0,"snowCm":0.0,"windSpeed":2.0,"humidity":60}]}],"source":"기상청 단기예보"}
+{
+  "mountainId": 1,
+  "mountainName": "예시산",
+  "baseTime": "2026-10-03T08:00:00",
+  "days": [
+    {
+      "date": "2026-10-03",
+      "level": "GOOD",
+      "message": "등산하기 좋은 날씨예요. 즐거운 산행 되세요!",
+      "notes": [],
+      "hours": [
+        {
+          "time": "2026-10-03T09:00:00",
+          "temperature": 18.0,
+          "sky": 1,
+          "pty": 0,
+          "pop": 10,
+          "precipitationMm": 0.0,
+          "snowCm": 0.0,
+          "windSpeed": 2.0,
+          "humidity": 60
+        }
+      ]
+    }
+  ],
+  "source": "기상청 단기예보"
+}
 ```
 
 `message`는 `HikingWeatherRules`가 결정하며 위 예시는 실제 GOOD 문구다. `Level`은 GOOD/CAUTION/BAD다. 기온 °C, 강수확률 %, 강수량 mm, 적설 cm, 풍속 m/s, 습도 %다. SKY 1/3/4는 맑음/구름 많음/흐림, PTY 0/1/2/3/4는 없음/비/비·눈/눈/소나기다.
@@ -344,7 +442,16 @@ FE 실등산 선택 화면은 이 목록을 받은 뒤 이름/시·군을 필터
 | clientRequestId | String | 필수, UUID 형식 문자열 |
 
 ```json
-{"mountainId":1,"courseId":null,"startedAt":"2026-10-01T00:00:00Z","endedAt":"2026-10-01T03:00:00Z","distanceMeters":5800.0,"elapsedMs":8040000,"completed":true,"clientRequestId":"123e4567-e89b-12d3-a456-426614174000"}
+{
+  "mountainId": 1,
+  "courseId": null,
+  "startedAt": "2026-10-01T00:00:00Z",
+  "endedAt": "2026-10-01T03:00:00Z",
+  "distanceMeters": 5800.0,
+  "elapsedMs": 8040000,
+  "completed": true,
+  "clientRequestId": "123e4567-e89b-12d3-a456-426614174000"
+}
 ```
 
 사용자 ID, 산 이름, 산행 날짜, 원시 GPS 경로는 Request 필드가 아니다.
@@ -365,7 +472,19 @@ FE 실등산 선택 화면은 이 목록을 받은 뒤 이름/시·군을 필터
 | journalId | Long | 가능 | 연결된 일지 ID; 없으면 null |
 
 ```json
-{"id":42,"mountainId":1,"mountainName":"예시산","courseId":null,"startedAt":"2026-10-01T00:00:00Z","endedAt":"2026-10-01T03:00:00Z","hikingDate":"2026-10-01","distanceMeters":5800.0,"elapsedMs":8040000,"completed":true,"journalId":null}
+{
+  "id": 42,
+  "mountainId": 1,
+  "mountainName": "예시산",
+  "courseId": null,
+  "startedAt": "2026-10-01T00:00:00Z",
+  "endedAt": "2026-10-01T03:00:00Z",
+  "hikingDate": "2026-10-01",
+  "distanceMeters": 5800.0,
+  "elapsedMs": 8040000,
+  "completed": true,
+  "journalId": null
+}
 ```
 
 ### H01. 실제 산행 결과 저장
@@ -388,7 +507,21 @@ FE 실등산 선택 화면은 이 목록을 받은 뒤 이름/시·군을 필터
 - Response: `List<HikingActivityResponse>`. 예시는 H01 객체를 배열에 담은 형태이며 빈 경우 `[]`다.
 
 ```json
-[{"id":42,"mountainId":1,"mountainName":"예시산","courseId":null,"startedAt":"2026-10-01T00:00:00Z","endedAt":"2026-10-01T03:00:00Z","hikingDate":"2026-10-01","distanceMeters":5800.0,"elapsedMs":8040000,"completed":true,"journalId":10}]
+[
+  {
+    "id": 42,
+    "mountainId": 1,
+    "mountainName": "예시산",
+    "courseId": null,
+    "startedAt": "2026-10-01T00:00:00Z",
+    "endedAt": "2026-10-01T03:00:00Z",
+    "hikingDate": "2026-10-01",
+    "distanceMeters": 5800.0,
+    "elapsedMs": 8040000,
+    "completed": true,
+    "journalId": 10
+  }
+]
 ```
 
 - 주요 상태: 200, 인증 401. FE 기록 탭·일지 후보 목록에 연결되어 있다.
@@ -421,7 +554,12 @@ FE 실등산 선택 화면은 이 목록을 받은 뒤 이름/시·군을 필터
 | isPublic | Boolean | 필수, false 가능 |
 
 ```json
-{"hikingRecordId":42,"title":"가을 산행","content":"천천히 걸으며 풍경을 즐겼다.","isPublic":false}
+{
+  "hikingRecordId": 42,
+  "title": "가을 산행",
+  "content": "천천히 걸으며 풍경을 즐겼다.",
+  "isPublic": false
+}
 ```
 
 이 필드 이름은 HTTP 계약 그대로이며 Java 일지 Entity의 ID라는 뜻이 아니다. `mountainName`, `hikingDate`는 생성 DTO 필드가 아니다. 테스트에서 위조한 산/날짜 추가값은 사용되지 않고 활동 값으로 저장된다.
@@ -438,7 +576,11 @@ FE 실등산 선택 화면은 이 목록을 받은 뒤 이름/시·군을 필터
 | hikingDate | LocalDate | 생략/null만 허용(@Null) |
 
 ```json
-{"title":"수정한 산행 후기","content":"내용을 보완했다.","isPublic":true}
+{
+  "title": "수정한 산행 후기",
+  "content": "내용을 보완했다.",
+  "isPublic": true
+}
 ```
 
 산/날짜/연결 ID를 non-null로 보내면 같은 값이라도 400이다. 공개 여부만 보내는 PATCH도 필수 제목/내용 검증으로 실패한다. FE는 수정 가능한 세 필드만 보낸다.
@@ -458,7 +600,17 @@ FE 실등산 선택 화면은 이 목록을 받은 뒤 이름/시·군을 필터
 | hikingRecordId | Long | 가능 | 연결된 실제 활동 ID, legacy null |
 
 ```json
-{"id":10,"userId":7,"nickname":"산사람","mountainName":"예시산","title":"가을 산행","content":"천천히 걸으며 풍경을 즐겼다.","hikingDate":"2026-10-01","isPublic":false,"hikingRecordId":42}
+{
+  "id": 10,
+  "userId": 7,
+  "nickname": "산사람",
+  "mountainName": "예시산",
+  "title": "가을 산행",
+  "content": "천천히 걸으며 풍경을 즐겼다.",
+  "hikingDate": "2026-10-01",
+  "isPublic": false,
+  "hikingRecordId": 42
+}
 ```
 
 일지 목록도 같은 DTO로 전체 content를 포함한다. 회원 출생연도/이메일/OAuth 정보, 활동의 원시 경로·거리·시각은 이 DTO에 없다. 공개 일지에는 연결 활동 숫자 ID는 포함되지만 H03의 본인 제한으로 타인의 활동 상세를 읽을 수 없다.
@@ -478,7 +630,19 @@ FE 실등산 선택 화면은 이 목록을 받은 뒤 이름/시·군을 필터
 - Response: `List<HikingRecordResponse>`, 주요 상태 200, 인증 401.
 
 ```json
-[{"id":10,"userId":7,"nickname":"산사람","mountainName":"예시산","title":"가을 산행","content":"천천히 걸으며 풍경을 즐겼다.","hikingDate":"2026-10-01","isPublic":false,"hikingRecordId":42}]
+[
+  {
+    "id": 10,
+    "userId": 7,
+    "nickname": "산사람",
+    "mountainName": "예시산",
+    "title": "가을 산행",
+    "content": "천천히 걸으며 풍경을 즐겼다.",
+    "hikingDate": "2026-10-01",
+    "isPublic": false,
+    "hikingRecordId": 42
+  }
+]
 ```
 
 ### J03. 공개 등산일지 목록
@@ -489,7 +653,19 @@ FE 실등산 선택 화면은 이 목록을 받은 뒤 이름/시·군을 필터
 - Response: `List<HikingRecordResponse>`, 예시 아래. 주요 상태 200, 인증 401.
 
 ```json
-[{"id":10,"userId":7,"nickname":"산사람","mountainName":"예시산","title":"가을 산행","content":"천천히 걸으며 풍경을 즐겼다.","hikingDate":"2026-10-01","isPublic":true,"hikingRecordId":42}]
+[
+  {
+    "id": 10,
+    "userId": 7,
+    "nickname": "산사람",
+    "mountainName": "예시산",
+    "title": "가을 산행",
+    "content": "천천히 걸으며 풍경을 즐겼다.",
+    "hikingDate": "2026-10-01",
+    "isPublic": true,
+    "hikingRecordId": 42
+  }
+]
 ```
 
 ### J04. 다른 사용자 공개 일지 목록
@@ -508,7 +684,17 @@ FE 실등산 선택 화면은 이 목록을 받은 뒤 이름/시·군을 필터
 - Response: 위 `HikingRecordResponse` JSON. legacy 예시는 아래와 같다.
 
 ```json
-{"id":11,"userId":7,"nickname":"산사람","mountainName":"기존 산 이름","title":"기존 일지","content":"기존 내용","hikingDate":"2026-09-01","isPublic":false,"hikingRecordId":null}
+{
+  "id": 11,
+  "userId": 7,
+  "nickname": "산사람",
+  "mountainName": "기존 산 이름",
+  "title": "기존 일지",
+  "content": "기존 내용",
+  "hikingDate": "2026-09-01",
+  "isPublic": false,
+  "hikingRecordId": null
+}
 ```
 
 - 주요 상태: 200, 없는 일지/타인 비공개 일지 404, 인증 401.
@@ -521,7 +707,17 @@ FE 실등산 선택 화면은 이 목록을 받은 뒤 이름/시·군을 필터
 - Response: 같은 `HikingRecordResponse` 구조, 예시 아래.
 
 ```json
-{"id":10,"userId":7,"nickname":"산사람","mountainName":"예시산","title":"수정한 산행 후기","content":"내용을 보완했다.","hikingDate":"2026-10-01","isPublic":true,"hikingRecordId":42}
+{
+  "id": 10,
+  "userId": 7,
+  "nickname": "산사람",
+  "mountainName": "예시산",
+  "title": "수정한 산행 후기",
+  "content": "내용을 보완했다.",
+  "hikingDate": "2026-10-01",
+  "isPublic": true,
+  "hikingRecordId": 42
+}
 ```
 
 - 주요 상태: 200, 입력/불변 필드 지정 400, 없음/타인 일지 404, 프로필 미완료/CSRF 403, 인증 401.
@@ -543,7 +739,20 @@ FE 실등산 선택 화면은 이 목록을 받은 뒤 이름/시·군을 필터
 - Response: `List<PublicMemberResponse>`; 서버가 순위 번호 필드를 반환하지 않는다. 주요 상태 200, 인증 401.
 
 ```json
-[{"userId":7,"nickname":"산사람","profileImageUrl":"https://example.com/provider-photo.jpg","score":120},{"userId":8,"nickname":"걷는사람","profileImageUrl":null,"score":null}]
+[
+  {
+    "userId": 7,
+    "nickname": "산사람",
+    "profileImageUrl": "https://example.com/provider-photo.jpg",
+    "score": 120
+  },
+  {
+    "userId": 8,
+    "nickname": "걷는사람",
+    "profileImageUrl": null,
+    "score": null
+  }
+]
 ```
 
 `members.score`와 점수 조회는 구현되어 있다. 본인 점수는 U01, 타인 점수는 U03, 랭킹 점수는 R01에서 제공하므로 별도의 중복 score 조회 API는 필요하지 않다.
@@ -580,11 +789,17 @@ FE 실등산 선택 화면은 이 목록을 받은 뒤 이름/시·군을 필터
 | ResponseStatusException | 예외가 지정한 상태 | request_failed | reason, 없으면 요청을 처리할 수 없습니다. |
 
 ```json
-{"error":"request_failed","message":"등산기록을 찾을 수 없습니다."}
+{
+  "error": "request_failed",
+  "message": "등산기록을 찾을 수 없습니다."
+}
 ```
 
 ```json
-{"error":"request_failed","message":"이미 등산일지를 작성한 기록입니다."}
+{
+  "error": "request_failed",
+  "message": "이미 등산일지를 작성한 기록입니다."
+}
 ```
 
 위 예시는 각각 J01의 404, J01의 409에서 사용하는 reason이다. H03의 404는 reason 없이 발생하므로 message는 `요청을 처리할 수 없습니다.`다. 모든 예외를 포괄하는 Handler는 아니다. DB 무결성 예외, path 타입 변환, multipart 필수 part 누락 등 명시적으로 처리하지 않은 오류에 위 두 필드 형식을 일괄 보장하지 않는다. 프레임워크 기본 오류 응답은 별도 실행 환경에 따라 확인해야 한다.
