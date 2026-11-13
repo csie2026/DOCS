@@ -1,4 +1,4 @@
-> FE `3b54a38^:docs/profile-year-selection.md`에서 복구한 구현·검증 이력입니다. 본문의 브랜치·테스트 수·실행 대기 문구는 작성 당시 기록이며 최신 상태가 아닙니다. 현행 HTTP 계약은 [API 명세](API_SPEC.md), 공통 탈퇴 정책은 [회원탈퇴](account-withdrawal.md)를 따릅니다. FE 경로는 FE 저장소 루트 기준입니다.
+> FE `3b54a38^:docs/profile-year-selection.md`에서 복구하고 원격 dev의 이전 이력과 대조한 구현·검증 이력입니다. 본문의 FE 소스·실행 경로는 FE 저장소 루트 기준이며, BE로 명시한 경로는 BE 저장소 기준입니다. 브랜치·테스트 수·실행 대기 및 PR 계획은 작성 당시 기록이며 현재 상태나 이번 병합 작업의 실행 지시가 아닙니다. 현행 HTTP 계약은 [API 명세](API_SPEC.md), 공통 탈퇴 정책은 [회원탈퇴](account-withdrawal.md)를 따릅니다.
 
 # 출생연도 선택 방식 개선
 
