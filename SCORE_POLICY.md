@@ -1,6 +1,6 @@
 # ToPeak 점수·랭킹 및 산행 통계 정책
 
-검토일: 2026-11-13. BE `bd102653758f104cb9369d288ce1f1ebda35c337`, FE `66ceb1fe288d9047cd821b986b4c33e4f030e75b` 기준이다. API의 필드·HTTP 계약은 [API_SPEC.md](API_SPEC.md), GPS/지문 상세 호환 이력은 [hiking-activity-integrity.md](hiking-activity-integrity.md)를 따른다. 이 문서는 배포 DB의 실제 이력이나 원장을 변경하는 지시가 아니다.
+검토일: 2026-11-13. BE `bd102653758f104cb9369d288ce1f1ebda35c337`, FE `66ceb1fe288d9047cd821b986b4c33e4f030e75b` 기준이다. API의 필드·HTTP 계약은 [ToPeak API 명세서.md](ToPeak%20API%20%EB%AA%85%EC%84%B8%EC%84%9C.md), GPS/지문 상세 호환 이력은 [hiking-activity-integrity.md](hiking-activity-integrity.md)를 따른다. 이 문서는 배포 DB의 실제 이력이나 원장을 변경하는 지시가 아니다.
 
 ## 1. 현행 v2
 

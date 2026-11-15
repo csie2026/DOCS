@@ -2,7 +2,7 @@
 
 ## 현행 계약 (2026-11-13)
 
-BE `bd102653758f104cb9369d288ce1f1ebda35c337`, FE `66ceb1fe288d9047cd821b986b4c33e4f030e75b` 기준이다. 요청·응답·상태 코드는 [API 명세 H01~H04](API_SPEC.md#7-실제-등산기록-api), 점수·횟수의 원본은 [점수·통계 정책](SCORE_POLICY.md)을 따른다. BE 테스트 실행 요약은 [BE의 기존 경로](https://github.com/csie2026/BE/blob/dev/docs/hiking-activity-integrity.md)에 유지한다.
+BE `bd102653758f104cb9369d288ce1f1ebda35c337`, FE `66ceb1fe288d9047cd821b986b4c33e4f030e75b` 기준이다. 요청·응답·상태 코드는 [API 명세 H01~H04](ToPeak%20API%20%EB%AA%85%EC%84%B8%EC%84%9C.md#7-실제-등산기록-api), 점수·횟수의 원본은 [점수·통계 정책](SCORE_POLICY.md)을 따른다. BE 테스트 실행 요약은 [BE의 기존 경로](https://github.com/csie2026/BE/blob/dev/docs/hiking-activity-integrity.md)에 유지한다.
 
 - 신규 활동은 전체 gpsSegments가 필수이며 명시적 빈 배열은 허용한다. 전체 경로 형식·시각·자원 한도를 검증하고, 거리 근거가 있으면 구간 내 합과 제출 거리를 대조한다.
 - 현행 gps_recorded는 정확도 좋은 표본 하나의 존재가 아니라 **모든 표본 정확도≤50m 및 양의 구간 내 이동 간선 존재**인 거리 근거다. 선택적 gpsEvidence는 경로/거리 근거를 대체하지 않는다.
@@ -14,7 +14,7 @@ BE `bd102653758f104cb9369d288ce1f1ebda35c337`, FE `66ceb1fe288d9047cd821b986b4c3
 
 ## 과거 구현·배포 이력 원문
 
-아래는 BE에서 이관한 기존 문서 전체다. 초기 integrity V5 명칭·하루1건 v1·표본 존재 기준·옛 Java/테스트 결과는 **작성 당시** 설명이며 현행 계약이 아니다. 유효한 binary fingerprint·legacy 호환·롤아웃·위험 설명을 누락하지 않기 위해 원문을 보존한다. 본문의 파일 경로는 BE 저장소 루트 기준이다. 현행 내용은 위 절 및 API_SPEC/SCORE_POLICY를 우선한다.
+아래는 BE에서 이관한 기존 문서 전체다. 초기 integrity V5 명칭·하루1건 v1·표본 존재 기준·옛 Java/테스트 결과는 **작성 당시** 설명이며 현행 계약이 아니다. 유효한 binary fingerprint·legacy 호환·롤아웃·위험 설명을 누락하지 않기 위해 원문을 보존한다. 본문의 파일 경로는 BE 저장소 루트 기준이다. 현행 내용은 위 절 및 ToPeak API 명세서.md/SCORE_POLICY를 우선한다.
 
 ---
 
