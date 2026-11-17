@@ -6,6 +6,7 @@
 
 - BE: `bd102653758f104cb9369d288ce1f1ebda35c337` (`dev`, 공개 보너스 보존 PR #47 포함).
 - FE: `66ceb1fe288d9047cd821b986b4c33e4f030e75b` (`dev` 기준 코드, 프로필 저장 결과 확인 포함).
+- 이후 변경 반영 기준(2026-11-17): BE `168b9aa`, FE `a5d034a` (`dev`). 일지 생성 자격·FE 연결 상태·Migration 설명을 보완했으며 아래 선행 테스트 실적은 당시 기준을 유지한다.
 - BE 패키지: `com.ggmount`. 서비스명 ToPeak와 Java 패키지명은 다르다.
 - 배포 DB·OAuth 실제 왕복·기상청 live 응답을 확인한 문서가 아니다. 같은 BE HEAD의 별도 신규 PostgreSQL 14.24 검증 결과는 14장에 구분한다. 문서 작업에서 제품 코드/테스트/migration은 수정하지 않았다.
 - 현재 정책 원본은 [점수·통계 정책](SCORE_POLICY.md), GPS의 상세 호환 이력은 [산행 무결성](hiking-activity-integrity.md)에서 관리한다.
@@ -671,12 +672,12 @@ elapsedMs는 TRACKING 활동 시간이다. 일시정지 시간은 제외하지�
 ### H03. 내 등산기록 상세
 
 - **GET `/api/users/me/hiking-records/{id}` / 인증 필요 / 구현 완료**.
-- Path id(Long, 활동 ID), Query/Body 없음. Response: H01과 같은 객체, 200/없음·타인 활동404/인증401. 프로필 완료 불필요. 현재 FE 호출은 없다.
+- Path id(Long, 활동 ID), Query/Body 없음. Response: H01과 같은 객체, 200/없음·타인 활동404/인증401. 프로필 완료 불필요. FE 등산기록의 상세 패널에서 호출한다.
 
 ### H04. 본인 점수 재산정
 
 - **POST `/api/users/me/hiking-records/recalculate-score` / 인증·프로필 완료·CSRF 필요 / 구현 완료**.
-- Path/Query/Body 없음. 200 `ScoreSummaryResponse`, 인증401/프로필·CSRF403. 일반 DB 실패는 전파한다. 현재 FE 화면/함수 호출은 없다.
+- Path/Query/Body 없음. 200 `ScoreSummaryResponse`, 인증401/프로필·CSRF403. 일반 DB 실패는 전파한다. FE 랭킹 화면의 수동 새로고침에서 본인 점수 재산정을 요청한다. 화면 진입·foreground 복귀의 일반 재조회는 H04를 호출하지 않는다.
 - 본인 회원 잠금 아래 현재 원천을 재산정하며 v1 원장/금액과 원장 없는 과거 활동을 소급 변경하지 않는다. GET 조회는 이 endpoint를 자동 실행하지 않는다.
 
 | 응답 필드 | Java 자료형 | null/단위 |
@@ -702,7 +703,7 @@ elapsedMs는 TRACKING 활동 시간이다. 일시정지 시간은 제외하지�
 
 `HikingRecord`는 회원과 연결된 일지이며 `HikingActivity`를 optional OneToOne로 참조한다. 원칙은 **활동 1 : 일지 0..1**이다. V4에서 `hiking_records.hiking_activity_id` nullable FK와 UNIQUE를 추가했다. 기존 일지는 값을 null로 남겨 보존하며 활동을 임의 생성하거나 억지로 연결하지 않는다.
 
-새 일지 생성 시 회원 행 다음 본인 활동을 비관적 쓰기 lock으로 조회하고 이미 일지가 있는지 검사한다. 서비스 검사와 DB UNIQUE 모두 중복을 막는다. 새 일지의 산 이름과 날짜는 활동에서 복사하며 최초 생성 이후 수정하지 않는다. 정상 도달 `completed=true`만 후보로 제한하는 조건은 없다. 생성/수정/삭제는 일지 변경과 점수 재산정을 같은 트랜잭션에서 수행한다. 현재 정책 산의 마지막 공개 일지를 비공개/삭제하면 보너스 50을 회수하고 재공개하면 복원한다. 같은 산의 다른 공개 일지가 남으면 유지하며 중복 지급하지 않는다. v1 보너스의 저장 금액·버전은 공개 상태 변경으로도 바꾸지 않는다. 일지 사진 첨부/업로드 API와 이미지 필드는 없다. U05는 회원 프로필·배경 사진이며 일지 사진 API가 아니다.
+새 일지 생성 시 회원 행 다음 본인 활동을 비관적 쓰기 lock으로 조회하고 이미 일지가 있는지 검사한다. 서비스 검사와 DB UNIQUE 모두 중복을 막는다. 새 일지의 산 이름과 날짜는 활동에서 복사하며 최초 생성 이후 수정하지 않는다. 생성 자격은 저장 거리≥500m AND elapsedMs≥1,200,000 또는 서버 검증 완등(completed=true AND gpsValidationVersion=1)이다. 일반 산행의 생성 자격에 GPS 점수 근거나 CERTIFIED 상태는 요구하지 않는다. 생성/수정/삭제는 일지 변경과 점수 재산정을 같은 트랜잭션에서 수행한다. 현재 정책 산의 마지막 공개 일지를 비공개/삭제하면 보너스 50을 회수하고 재공개하면 복원한다. 같은 산의 다른 공개 일지가 남으면 유지하며 중복 지급하지 않는다. v1 보너스의 저장 금액·버전은 공개 상태 변경으로도 바꾸지 않는다. 일지 사진 첨부/업로드 API와 이미지 필드는 없다. U05는 회원 프로필·배경 사진이며 일지 사진 API가 아니다.
 
 ### J01 Request: HikingRecordRequest
 
@@ -780,8 +781,9 @@ elapsedMs는 TRACKING 활동 시간이다. 일시정지 시간은 제외하지�
 - **POST `/api/journals` / 인증 및 프로필 완료 필요 / 구현 완료**
 - Path/Query: 없음. Request Body: 위 `HikingRecordRequest` JSON.
 - 설명: 로그인 회원이 소유한 실제 활동으로만 생성한다. 산·날짜는 서버가 활동에서 결정한다.
+- 저장 거리≥500m AND 일시정지 제외 활동 시간 `elapsedMs>=1,200,000` 또는 `completed=true AND gpsValidationVersion=1`이어야 한다. 일반 산행은 GPS 점수 근거나 CERTIFIED 상태 없이도 생성 가능하다. 자격 미충족 시 400이며 BE 오류 메시지는 `등산일지는 500m·일시정지 제외 20분 이상이거나 서버 검증 완등인 산행에 작성할 수 있습니다.`다.
 - 공개 일지라면 회원·산별 보너스 재산정을 같은 트랜잭션에서 수행한다. 기존 v1 보너스 금액·버전은 보존한다.
-- Response: 위 `HikingRecordResponse` JSON. 주요 상태: **200**, 입력 400, 활동 없음/타인 활동 404, 중복 일지 409, 프로필 미완료/CSRF 403, 인증 401.
+- Response: 위 `HikingRecordResponse` JSON. 주요 상태: **200**, 입력/생성 자격 미충족 400, 활동 없음/타인 활동 404, 중복 일지 409, 프로필 미완료/CSRF 403, 인증 401.
 
 ### J02. 내 등산일지 목록
 
@@ -888,7 +890,7 @@ elapsedMs는 TRACKING 활동 시간이다. 일시정지 시간은 제외하지�
 
 - **DELETE `/api/journals/{id}` / 인증·프로필 완료·작성자 권한 필요 / 구현 완료**
 - Path: `id` Long, 일지 ID. Query/Request Body: 없음.
-- 설명: 일지를 물리 삭제한다. 실제 활동은 삭제하지 않으므로 같은 활동으로 새 일지를 다시 작성할 수 있다. H02/H03의 `journalId`는 다시 null이 된다.
+- 설명: 일지를 물리 삭제하고 실제 활동은 유지한다. H02/H03의 `journalId`는 다시 null이 되지만 같은 활동의 재작성은 현재 J01 생성 자격을 충족해야 한다. 기존에 생성된 부적격 일지도 기존 권한·수정 조건에 따라 읽기·수정·삭제할 수 있으나 삭제 후 신규 생성은 현재 자격 검증을 통과해야 한다.
 - 삭제 후 현재 정책 보너스를 재산정하되 활동의 방문·정상 점수와 v1 보너스의 저장 금액·버전을 보존한다.
 - Response Body: 없음. 주요 상태 204, 없음/타인 일지 404, 프로필 미완료/CSRF 403, 인증 401.
 
@@ -898,7 +900,7 @@ elapsedMs는 TRACKING 활동 시간이다. 일시정지 시간은 제외하지�
 
 - **GET `/api/rankings` / 인증 필요 / 구현 완료**.
 - Path/Query/Body 없음. 프로필 완료 회원 최대 100명, score non-null 우선 → score DESC → id ASC. null도 참여하며 기간/지역/페이지 파라미터는 없다.
-- Response: `List<PublicMemberResponse>`, 200, Cache-Control: no-store, 인증401. rank 필드는 없다. FE에 getRankings helper는 있으나 현재 랭킹 화면은 R02를 사용한다.
+- Response: `List<PublicMemberResponse>`, 200, Cache-Control: no-store, 인증401. rank 필드는 없다. FE 랭킹 수동 새로고침에서 보조 호출하며 화면 순위는 R01 응답이 아닌 R02를 기준으로 한다.
 
 ```json
 [
@@ -953,7 +955,7 @@ elapsedMs는 TRACKING 활동 시간이다. 일시정지 시간은 제외하지�
 }
 ```
 
-FE는 이 결과를 임의 점수 재계산/재정렬 없이 사용하고 null은 '점수 미산정', 0은 '0점'으로 표시한다. 새로고침 버튼·화면 재진입·foreground 복귀로 재조회하며 계정 범위 변경/abort 뒤 오래된 결과를 버린다. 오류와 빈 결과·인증 실패를 구분한다.
+FE는 이 결과를 임의 점수 재계산/재정렬 없이 사용하며 회원 점수 null과 숫자 0을 모두 화면에 '0점'으로 표시한다. 서버의 null은 미산정이며 숫자 0과 의미가 다르다. 수동 새로고침은 H04 성공 후 R01을 응답 대기 없이 보조 호출하고 R02를 재조회한다. R01 실패는 R02 재조회를 막지 않으며 H04 실패 시 해당 흐름의 R01 호출·R02 재조회 없이 오류를 표시한다. 화면 재진입·foreground 복귀는 H04 없이 재조회한다. 계정 범위 변경/abort 뒤 오래된 결과를 버리며 오류와 빈 결과·인증 실패를 구분한다.
 
 ### 현재 점수 저장과 v1/v2 호환
 
@@ -1072,9 +1074,9 @@ API helper의 존재와 실제 화면 호출을 구분한다. 계정 전환 확�
 | GPS 시작/진행/일시정지/복구 | FE/네이티브 내부 | 웹 저장소 체크포인트, iOS 네이티브 Core Location/SQLite. 서버 실시간 세션 API 없음 |
 | 산행 종료 저장/재시도 | 연결 | 고정 UUID·gpsSegments·요약, 2xx 본문 확인 후 서버 completed 수용 |
 | 활동 목록/기록/일지 후보/통계 | 연결 | H02, 활동 단위 통계·서버 검증 완등 산 목록 |
-| 활동 상세 H03 / 재산정 H04 | 미연결 | 현재 FE 호출 없음; 활동 저장 시 BE 자동 점수 갱신은 별개 |
+| 활동 상세 H03 / 재산정 H04 | 연결 | 기록 상세 패널에서 H03, 랭킹 수동 새로고침에서 H04 호출; 활동 저장 시 BE 자동 점수 갱신은 별개 |
 | 일지 CRUD·공개 피드·사용자 목록 | 연결 | J01~J07, 상세 author를 통해 공개 프로필 이동 |
-| 랭킹 | 연결 | R02 사용, R01 helper는 현재 화면 미사용 |
+| 랭킹 | 연결 | 표시 순위는 R02 기준, 수동 새로고침은 H04 성공 후 R01 보조 호출 및 R02 재조회 |
 | 월 목표 | 연결 | G01/G02 서버 저장, 진행률은 FE 집계 |
 | 즐겨찾기 | FE localStorage | 인증 회원 ID별 키, 서버 즐겨찾기 API 없음 |
 
@@ -1084,7 +1086,7 @@ API helper의 존재와 실제 화면 호출을 구분한다. 계정 전환 확�
 2. 웹 GPS 또는 iOS 네이티브 수집 자료로 구간·거리·일시정지 제외 시간을 관리한다. 플랫폼/복구 상태별 세부 절차는 FE의 [iOS 문서](https://github.com/csie2026/FE/blob/dev/docs/ios-background-gps.md)를 따른다.
 3. 종료된 요약과 전체 gpsSegments를 고정해 H01로 전송한다. 임시 기록·네이티브 세션의 소유 회원과 현재 계정을 확인한다.
 4. BE가 경로/거리/정상·중복을 검사하고 활동과 점수를 같은 트랜잭션에서 저장한다. FE는 응답을 확인한 뒤에만 초안 저장 완료 처리한다. 실패/유실은 초안을 보존하고 같은 요청으로 재시도한다.
-5. FE 일지 작성은 본인의 journalId=null 활동을 선택한다. 서버는 J01에서 활동 소유권·중복을 재확인하고 산/날짜를 활동에서 결정한다. 중복409 시 FE가 후보를 재조회한다.
+5. FE 일지 작성은 본인의 journalId=null 활동 중 거리≥500m AND 활동 시간≥20분 또는 서버 검증 완등인 활동을 선택한다. 부적격 활동은 작성 진입·저장을 제한하며 서버도 J01에서 저장된 활동의 자격·소유권·중복을 최종 검증하고 산/날짜를 활동에서 결정한다. 자격 미충족은400, 중복409 시 FE가 후보를 재조회한다.
 6. J06은 제목/내용/공개 여부만 교체한다. J07은 활동을 남긴다. legacy null 연결 일지는 기존 산/날짜를 보존하며 수정/삭제할 수 있다.
 
 FE 공통 API는 기본20초 제한, credentials include/cache no-store이며 CSRF 준비 후 변경 요청을 보낸다. 자동 재전송은 없다. 클라이언트의 ApiError status=0, network_error/request_timeout 및 invalid_response는 **BE가 반환한 HTTP 상태·오류 코드가 아닐 수 있다**. 204는 JSON으로 파싱하지 않는다. 모든 API에 동일한 계정 원자성 body가 있는 것은 아니며, 이미지·목표·활동은 FE 사전 확인과 Principal 권한 검증을 사용한다.
@@ -1118,7 +1120,11 @@ BE 경로는 `src/main/java/com/ggmount/` 기준이다.
 
 ### Migration 및 기존 데이터
 
-V1 회원/일지, V2 산, V3 코스, V3.1 이미지/월 목표, V4 활동 연결, V5 점수 원장, V6 선택적 월 목표, V7 GPS 지문/동일 세션 제약, V8 가입 시각으로 총9개다. 적용된 SQL checksum/이력을 임의 변경하거나 repair/초기화하지 않는다. V4는 legacy 일지 null 연결을 보존하고 V7은 기존 GPS metadata를 null로 남긴다. V8은 기존 회원의 가입 시각을 과거 활동으로 추정하지 않는다. 기록 없는 활동/가입일을 자동 backfill하지 않는다.
+공통 `classpath:db/migration`에는 V1 회원/일지, V2 산, V3 코스, V3.1 이미지/월 목표, V4 활동 연결, V5 점수 원장, V6 선택적 월 목표, V7 GPS 지문/동일 세션 제약, V8 가입 시각과 V9005 테스트 데이터 정리 SQL이 있다. V9005는 테스트산·테스트 코스 및 관련 활동·원장을 정리하고 연결 일지는 활동 참조만 해제하여 유지한다. 해당 경로가 활성화되고 Flyway가 검증·이력 확인을 통과하여 미적용 migration을 실행할 때 적용 대상이 되며, 모든 환경에서 무조건 실행되거나 운영 DB에 적용 완료됐다는 의미는 아니다.
+
+`local`·`prod` 설정은 공통 경로만 사용한다. `classpath:db/local-test`의 V9000~V9003은 테스트 데이터 추가·제거용 별도 경로이며 기본 local 설정에 포함되지 않는다. `classpath:db/compat/rds-v9001`의 V9000·V9001은 기존 운영 이력 호환용이다. `prod,prod-rds-v9001` 조합에서 공통 경로와 함께 사용하며 신규 DB용이 아니다. 보호 코드는 이 조합과 기존 성공 이력·체크섬을 확인한다.
+
+운영 `prod`에서는 local/mobile 혼용과 Flyway 비활성화를 금지한다. 허용 경로·리소스·적용 이력의 사전 검증 후 migrate하며, 검증 생략·순서 우회·임의 대상 버전·사용자 정의 migration/callback 등 우회 설정과 V9002·V9003을 거부한다. 적용된 SQL checksum/이력을 임의 변경하거나 repair/초기화하지 않는다. V4는 legacy 일지 null 연결을 보존하고 V7은 기존 GPS metadata를 null로 남긴다. V8은 기존 회원의 가입 시각을 과거 활동으로 추정하지 않는다. 기록 없는 활동/가입일을 자동 backfill하지 않는다.
 
 ### API별 FE 사용·테스트 대조
 
@@ -1140,10 +1146,10 @@ V1 회원/일지, V2 산, V3 코스, V3.1 이미지/월 목표, V4 활동 연결
 | W01 | 산 상세/시작 준비 날씨 | KmaForecastClient/HikingWeatherRules 단위, FE mountainWeather; live 1개는 키 미제공 스킵 |
 | H01 | 종료/복구 저장 | 기존 PG 32 중 GPS/멱등/원장/롤백/동시성, HikingScoring H2 및 FE activitySave |
 | H02 | 기록·통계·완등·일지 후보 | HikingStatisticsSource/PublicProfileStatistics H2, PG 보조 계정 분리, FE 통계 |
-| H03 | 현재 미사용 | ProfileJournal H2와 PG의 본인/타인 활동 접근 검증 |
-| H04 | 현재 미사용 | HikingScoring H2, PG 보조 v1 금액 보존 |
+| H03 | 등산기록 상세 패널 | ProfileJournal H2와 PG의 본인/타인 활동 접근 검증 |
+| H04 | 랭킹 수동 새로고침 | HikingScoring H2, PG 보조 v1 금액 보존 |
 | J01~J07 | 작성·피드·내/타인 목록·상세·수정·삭제 | ProfileJournal H2, PG 생성/공개/삭제/보너스 및 FE hikingRecords/publicProfile |
-| R01 | helper만 존재 | RankingIntegrationTests H2, FE ranking DTO helper |
+| R01 | 수동 새로고침의 보조 호출 | RankingIntegrationTests H2, FE ranking DTO helper |
 | R02 | 랭킹 화면 | RankingIntegrationTests 6 H2, PG 보조 원장·총점·순위, FE ranking/rankingState |
 | G01/G02 | 마이페이지 목표 | MonthlyGoalIntegrationTests 10 H2, FE monthlyGoals/응답검증. PG 전용 목표 CRUD suite는 미실시 |
 
@@ -1174,4 +1180,4 @@ DOCS fetch와 원격 HTTP 접근은 실패했다. 캐시된 origin/dev `01c5013`
 | 종전 명세에만 있는 미구현 endpoint | **0** |
 | 별도 추가가 확정된 예정 API | **0** |
 
-로그인·프로필 계정 보호·탈퇴·본인/공개 프로필 이미지·산/코스·날씨·활동/GPS·일지·점수·랭킹·통계·월 목표를 최신 코드와 대조했다. 기존 endpoint ID는 유지했고 새 경로만 추가했다. 점수 v2와 통계는 독립이며 v1 금액/버전은 보존한다. FE 미사용 경로(H03/H04/R01 화면)를 구현 누락으로 오인하지 않는다. 현재 계약·기획 확장·선행 테스트 실적과 실행 불가 범위를 분리한다.
+로그인·프로필 계정 보호·탈퇴·본인/공개 프로필 이미지·산/코스·날씨·활동/GPS·일지·점수·랭킹·통계·월 목표를 최신 코드와 대조했다. 기존 endpoint ID는 유지했고 새 경로만 추가했다. 점수 v2와 통계는 독립이며 v1 금액/버전은 보존한다. H03은 기록 상세 패널, H04·R01은 랭킹 수동 새로고침에 연결되어 있으며 표시 순위는 R02 기준이다. 현재 계약·기획 확장·선행 테스트 실적과 실행 불가 범위를 분리한다.
